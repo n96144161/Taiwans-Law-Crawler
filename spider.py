@@ -82,26 +82,41 @@ def export_rules_list(rules):
     if rules:
         for i, a in enumerate(rules):
             list_rules.append(a.text)
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("法規爬蟲工具")
 
-class SpiderGui:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("法規爬蟲工具")
+        #共用狀態(跨分頁共享，例如查詢字串)
+        #self.shared = {:}
+        self.nb = ttk.Notebook(self)
+        self.nb.pack(fill="both", expand = True)
+
+        #各分頁
+        self.page_find = FunctionFind(self.nb, self)
+        self.page_import = FunctionImport(self.nb, self)
+        self.nb.add(self.page_find, text="尋找法規並匯出")
+        self.nb.add(self.page_import, text="從excel清單匯入")
+class FunctionFind(ttk.Frame):
+    def __init__(self, parent, controller: App):
+        super().__init__(parent)
+        #self.root = root
+        #self.root.title("法規爬蟲工具")
         self.depts = get_depts()
         self.eyes = []
         self.rules = []
         export_dept_list()
-        ttk.Label(root, text = "選擇部會:").grid(row=0, column=0, padx=10, pady=10, sticky = "W")
-        self.depts_menu = ttk.Combobox(root, values = list_depts)
+        ttk.Label(self, text = "選擇部會:").grid(row=0, column=0, padx=10, pady=10, sticky = "W")
+        self.depts_menu = ttk.Combobox(self, values = list_depts)
         self.depts_menu.grid(row=0, column=1, padx=10, pady=10)
         self.depts_menu.bind("<<ComboboxSelected>>", self.refresh_depts_menu)
 
-        ttk.Label(root, text = "選擇目:").grid(row=1, column=0, padx=10, pady=10, sticky = "W")
-        self.eyes_menu = ttk.Combobox(root, values = list_eyes)
+        ttk.Label(self, text = "選擇目:").grid(row=1, column=0, padx=10, pady=10, sticky = "W")
+        self.eyes_menu = ttk.Combobox(self, values = list_eyes)
         self.eyes_menu.grid(row=1, column=1, padx=10, pady=10)
         self.eyes_menu.bind("<<ComboboxSelected>>", self.refresh_eyes_menu)
 
-        self.frame = tk.Frame(root, bg='#09c')#blue
+        self.frame = tk.Frame(self, bg='#09c')#blue
         self.frame.grid(row = 2,column=1, padx=10, pady=10, sticky="W")
         self.frame.grid_rowconfigure(0,weight=1)
         self.frame.grid_columnconfigure(0, weight=1)
@@ -118,19 +133,19 @@ class SpiderGui:
         self.scrollable_frame.bind("<Configure>", on_configure)
 
         self.checks = []
-        self.button = tk.Button(root, text = "選擇所需法規", command=self.press_button)
+        self.button = tk.Button(self, text = "選擇所需法規", command=self.press_button)
         self.button.grid(row=2, column=0, padx=10)
 
         self.mode_val = tk.BooleanVar()
-        radio_botton_1 = tk.Radiobutton(root, text="建立新表格", variable=self.mode_val, value=True)
+        radio_botton_1 = tk.Radiobutton(self, text="建立新表格", variable=self.mode_val, value=True)
         radio_botton_1.grid(row=3, column=0)
-        radio_botton_2 = tk.Radiobutton(root, text="使用現有表格", variable=self.mode_val, value=False)
+        radio_botton_2 = tk.Radiobutton(self, text="使用現有表格", variable=self.mode_val, value=False)
         radio_botton_2.grid(row=3,column=1)
 
-        self.export_button = tk.Button(root,text = "Export", command=self.export)
+        self.export_button = tk.Button(self,text = "Export", command=self.export)
         self.export_button.grid(row = 4, column=0)
 
-        self.powered_label = tk.Label(root, text='maintained by Sam Chen - sqfh' )
+        self.powered_label = tk.Label(self, text='maintained by Sam Chen - sqfh' )
         self.powered_label.grid(row = 5, column = 1,sticky="e")
         
 
@@ -193,9 +208,17 @@ class SpiderGui:
             df = pd.concat([df_exist,df])
             df.to_excel(file_pth, index=False, header=False)
 
+class FunctionImport(ttk.Frame):
+    def __init__(self, parent, controller : App):
+        super().__init__(parent)
+        self.excel_location = tk.StringVar()
+        button_location = tk.Button(self, text = "選擇excel").grid(row=0, column=0)
+        entry_location = tk.Entry(self).grid(row=0, column=1)
+
+    def choose_file_location():
+            folder_pth = filedialog.askopenfilename(title="選擇excel")
+            return folder_pth
 
     
 #show
-root = tk.Tk()
-app = SpiderGui(root)
-root.mainloop()
+App().mainloop()
